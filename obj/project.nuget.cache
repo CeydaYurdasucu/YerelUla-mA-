@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "LNCoKc8sDjU=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\ceyda\\OneDrive\\Masaüstü\\230201080_230201085\\UlasimHaritaUygulamasi\\UlasimHaritaUygulamasi.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\ceyda\\.nuget\\packages\\microsoft.web.webview2\\1.0.3124.44\\microsoft.web.webview2.1.0.3124.44.nupkg.sha512",
+    "C:\\Users\\ceyda\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512"
+  ],
+  "logs": []
+}

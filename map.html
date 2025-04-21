@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <style>
+        html, body { height: 100%; margin: 0; padding: 0; }
+        #map { height: calc(100% - 250px); }
+
+        #rotaPanelWrapper {
+            height: 250px;
+            background: #fff;
+            padding: 10px;
+            font-family: Arial;
+            font-size: 14px;
+            overflow-x: auto;
+            border-top: 1px solid #ccc;
+        }
+
+        #rotaListesi {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+        }
+
+        .rota-box {
+            min-width: 300px;
+            max-width: 350px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 8px;
+            background: #f9f9f9;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+
+        .rota-sec-btn {
+            margin-top: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+            background: #42a5f5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+
+        .rota-sec-btn:hover {
+            background: #1e88e5;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="rotaPanelWrapper">
+        <div id="rotaListesi">Rota bilgisi burada gösterilecektir.</div>
+    </div>
+
+    <script>
+        var map, startLat, startLon, endLat, endLon, markers = [];
+
+        let alternatifRotalar = [];
+
+        function loadEmptyMap() {
+            if (map != null) map.remove();
+            map = L.map('map').setView([40.76, 29.94], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+        }
+
+        function initializeMap(sLat, sLon, eLat, eLon, duraklar, isWalking, rotalarJson, rotaBilgiHTML) {
+            startLat = sLat;
+            startLon = sLon;
+            endLat = eLat;
+            endLon = eLon;
+            markers = duraklar;
+
+            if (map != null) map.remove();
+            map = L.map('map').setView([startLat, startLon], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            L.marker([startLat, startLon], {
+                icon: L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' })
+            }).addTo(map).bindPopup('Başlangıç').openPopup();
+
+            L.marker([endLat, endLon], {
+                icon: L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' })
+            }).addTo(map).bindPopup('Hedef');
+
+            markers.forEach(m => {
+                L.marker([m.lat, m.lon]).addTo(map).bindPopup(m.popup);
+            });
+
+            alternatifRotalar = rotalarJson;
+            rotalariGoster();
+        }
+
+        function rotalariGoster() {
+            const container = document.getElementById("rotaListesi");
+            container.innerHTML = "";
+            alternatifRotalar.forEach((rota, index) => {
+                const box = document.createElement("div");
+                box.className = "rota-box";
+                box.innerHTML = `
+                    <div class="rota-baslik"><b>🚩 ${rota.ad}</b></div>
+                    <div class="rota-bilgi">${rota.bilgi}</div>
+                    <button class="rota-sec-btn" onclick="rotaSec(${index})">Rotayı Seç</button>
+                `;
+                container.appendChild(box);
+            });
+        }
+
+        function rotaSec(index) {
+            if (!alternatifRotalar[index]) return;
+
+          
+            map.eachLayer(layer => {
+                if (layer instanceof L.Polyline || layer instanceof L.Marker) {
+                    map.removeLayer(layer);
+                }
+            });
+
+           
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+          
+            L.marker([startLat, startLon], {
+                icon: L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' })
+            }).addTo(map).bindPopup('Başlangıç').openPopup();
+
+            L.marker([endLat, endLon], {
+                icon: L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' })
+            }).addTo(map).bindPopup('Hedef');
+
+            markers.forEach(m => {
+                L.marker([m.lat, m.lon]).addTo(map).bindPopup(m.popup);
+            });
+
+          
+            let rotaCoords = alternatifRotalar[index].rotaCoords;
+            rotaCoords.forEach(step => {
+                let color = 'blue';
+                let dash = null;
+
+                if (step.mode === "walk") {
+                    color = 'green';
+                    dash = '5,10';
+                } else if (step.mode === "taxi") {
+                    color = 'gold';
+                } else if (step.mode === "transit") {
+                    color = 'blue';
+                }
+
+                L.polyline([[step.lat1, step.lon1], [step.lat2, step.lon2]], {
+                    color: color,
+                    dashArray: dash,
+                    weight: 5
+                }).addTo(map);
+            });
+        }
+    </script>
+</body>
+</html>
